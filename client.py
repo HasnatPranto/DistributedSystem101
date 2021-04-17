@@ -18,10 +18,10 @@ if __name__ == '__main__':
     cars = ['DS-98379','DS-12344','DS-45129','DS-31179','DS-41370','DS-18479','LL-124379','DL-12566',8]
 
     socket = socketio.Client()
-    socket.connect('http://127.0.0.1:5000', namespaces=['/confirmation'])
+    socket.connect('http://127.0.0.1:8014', namespaces=['/confirmation'])
 
-    @socket.on('message', namespace='/confirmation')
-    def notify(data):
+    @socket.event(namespace='/confirmation')
+    def message(data):
         print(f"Driver {data['driver']} is en route to pick up rider {data['rider']}, Ride fair:{data['fair']}")
         rating = random.randint(1, 5)
         print(f"{data['rider']} gave driver {data['driver']} a rating of {rating}/5!")
@@ -32,7 +32,7 @@ if __name__ == '__main__':
             "d_id": data['driver_id'],
             "rating": rating
         }
-        requests.post("http://127.0.0.1:5000/rating", json=rate_info)
+        requests.post("http://127.0.0.1:8000/rating", json=rate_info)
 
 
     while True:
@@ -51,8 +51,8 @@ if __name__ == '__main__':
             "car_number": random.choice(cars)
         }
 
-        requests.post("http://127.0.0.1:5000/rider", json= rider)
+        requests.post("http://127.0.0.1:8000/rider", json= rider)
         print(rider['name'], "is looking for a ride")
-        requests.post("http://127.0.0.1:5000/driver", json= driver)
+        requests.post("http://127.0.0.1:8000/driver", json= driver)
         print(driver['name'], "is looking for a trip")
-        time.sleep(2)
+        time.sleep(4)
