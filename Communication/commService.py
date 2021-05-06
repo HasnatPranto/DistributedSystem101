@@ -17,7 +17,11 @@ def send_best_pair():
     connectClient(data)
     return 'message sent'
 
+@app.route('/comm/docker', methods=['GET'])
+def checkStatus():
+    print('Ok')
+    return 'Ok'
+
 
 if __name__ == '__main__':
-
-    socket.run(app, port=8014)
+    socket.run(app, host= '0.0.0.0', port=9090)
