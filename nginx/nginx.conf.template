@@ -1,0 +1,11 @@
+server {
+
+    listen 80;
+
+    location /myride/api {
+        proxy_pass http://${rs_server}:6060;
+    }
+    location /myride/rating {
+        proxy_pass http://rating-service:6060;
+    }
+}

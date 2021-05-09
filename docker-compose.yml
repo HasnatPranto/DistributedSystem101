@@ -1,0 +1,114 @@
+version: '3'
+
+services:
+    database:
+      container_name: mysql_db
+      image: mysql
+      command: mysqld --default-authentication-plugin=mysql_native_password
+      environment:
+         - MYSQL_DATABASE=DbDs
+         - MYSQL_USER=admin
+         - MYSQL_ROOT_PASSWORD=admin123
+         - MYSQL_PASSWORD=admin123
+
+      networks:
+        hyperion:
+          ipv4_address: 13.14.0.100
+
+      volumes:
+         - ./Database/dbdt:/var/lib/mysql
+         - ./Database/initdb:/docker-entrypoint-initdb.d/:ro
+
+    redis:
+      image: redis
+      volumes:
+        - ./Redis/redis.conf:/redis.conf
+      command: [ "redis-server", "/redis.conf" ]
+      networks:
+        hyperion:
+          - ipv4_address: 13.14.0.200
+
+    ride-service-dhaka:
+      container_name: ride_service_dh
+      build: ./RideSharing
+      restart: always
+      depends_on:
+        - communication-service-dhaka
+      networks:
+        - hyperion
+          #- ipv4_address: 13.14.0.1
+
+    ride-service-bhola:
+      container_name: ride_service_bh
+      build: ./RideSharing
+      restart: always
+      depends_on:
+        - communication-service-bhola
+      networks:
+        - hyperion
+          #- ipv4_address: 13.14.0.1
+
+
+    communication-service-dhaka:
+      container_name: communication_service_dh
+      build: ./Communication
+      restart: always
+      expose:
+        - 9090
+      networks:
+        hyperion:
+          ipv4_address: 13.14.0.51
+
+    communication-service-bhola:
+      container_name: communication_service_bh
+      build: ./Communication
+      restart: always
+      expose:
+        - 9090
+      networks:
+        hyperion:
+          ipv4_address: 13.14.0.52
+
+    rating-service:
+      container_name: rating_service
+      build: ./Rating
+      restart: always
+      depends_on:
+        - database
+      networks:
+        - hyperion
+          #- ipv4_address: 13.14.0.2
+
+    nginx-dhaka:
+      container_name: nginx_dh
+      build: ./nginx
+      restart: always
+      environment:
+        - rs_server=ride-service-dhaka
+      command: /bin/sh -c "envsubst < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/nginx.conf && nginx -g 'daemon off;'"
+      networks:
+        hyperion:
+          ipv4_address: 13.14.0.13
+      depends_on:
+        - ride-service-dhaka
+        - rating-service
+
+    nginx-bhola:
+      container_name: nginx_bh
+      build: ./nginx
+      restart: always
+      environment:
+        - rs_server=ride-service-bhola
+      command: /bin/sh -c "envsubst < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/nginx.conf && nginx -g 'daemon off;'"
+      networks:
+        hyperion:
+          ipv4_address: 13.14.0.14
+      depends_on:
+        - ride-service-bhola
+        - rating-service
+
+networks:
+  hyperion:
+    ipam:
+      config:
+        - subnet: 13.14.0.0/24

@@ -7,10 +7,10 @@ from flask_socketio import SocketIO
 app = Flask(__name__)
 socket = SocketIO(app)
 
-@app.route('/rating', methods=['POST'])
+@app.route('/myride/rating', methods=['POST'])
 def rating():
-    print('Rating Server Ok')
-    connection = mysql.connector.connect(user='root', password='',host='127.0.0.1', database='mysql')
+    #print('Rating Server Ok')
+    connection = mysql.connector.connect(user='admin', password='admin123',host='13.14.0.100', database='DbDs', port=3306)
     data = request.json
     cursor = connection.cursor()
     query = "INSERT INTO Driver_rating (id,rider_id,rider_name,driver_id,driver_name,rating) VALUES (%s,%s,%s,%s,%s,%s)"
@@ -19,12 +19,28 @@ def rating():
     try:
         cursor.execute(query, qdata)
         connection.commit()
-        print("success")
+        #print("success")
         return flask.Response(status=201)
 
     except:
-        print("lost")
+        #print("lost")
         return flask.Response(status=400)
 
+#@app.route('/getRatings',methods=['GET'])
+def getRatings():
+    connection = mysql.connector.connect(user='admin', password='admin123', host='http://database', database='DbDs', port=1314)
+
+    if(connection.is_connected()):
+       print('Ok')
+    else:
+        print("not ok")
+
+
+@app.route('/rating/docker', methods =['GET'])
+def check():
+    return {
+        "status": 'Fine'
+    }
 if __name__ == '__main__':
-    app.run(port= 8015)
+    #getRatings()
+    app.run(host='0.0.0.0', port=6060)
