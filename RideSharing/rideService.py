@@ -13,7 +13,6 @@ app = Flask(__name__)
 socket = SocketIO(app)
 scheduler = APScheduler()
 scheduler.init_app(app)
-#scheduler.start()
 
 def make_pair():
 
@@ -22,7 +21,7 @@ def make_pair():
         driver_x, driver_y = [int(i) for i in driver['coordinates']]
         return math.sqrt(pow(rider_x - driver_x, 2) + pow(rider_y - driver_y, 2))
 
-    print(avail_riders)
+    #print(avail_riders)
     for rider in avail_riders:
         distance_min = 10000000000000
         nearest_driver = None
@@ -42,26 +41,32 @@ def make_pair():
             "driver_id": nearest_driver['id'],
             "fair": round(distance_min*2, 0)
         }
-        print(data)
-        requests.post("http://127.0.0.1:8000/comm", json=data)
+        #print(data)
+        if rider['location'] == 13:
+            requests.post("http://communication-service-dhaka:9090/comm", json=data)
+        else:
+            requests.post("http://communication-service-bhola:9090/comm", json=data)
 
+@app.route('/ride/docker', methods=['GET'])
+def checkStatus():
+    return {
+        'Status':"Fine"
+    }
 
-@app.route('/rider', methods=['POST'])
+@app.route('/myride/api/rider', methods=['POST'])
 def add_rider():
-    print('Riderr')
     data = request.json
     avail_riders.append(data)
     return flask.Response(status = 201)
 
 
-@app.route('/driver', methods=['POST'])
+@app.route('/myride/api/driver', methods=['POST'])
 def add_driver():
     data = request.json
-    print('driver')
     avail_drivers.append(data)
     return flask.Response(status=201)
 
 if __name__ == '__main__':
-    scheduler.add_job(id='task', func= make_pair, trigger='interval', seconds=3)
+    scheduler.add_job(id='task', func= make_pair, trigger='interval', seconds=5)
     scheduler.start()
-    app.run(port= 8013)
+    app.run(host = '0.0.0.0', port= 6060)
